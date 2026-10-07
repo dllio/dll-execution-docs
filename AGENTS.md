@@ -4,6 +4,8 @@ Use this guide to integrate the public API. It does not grant authority to sign,
 
 ## When to call
 
+Start with [capability selection and FAQ](CAPABILITY_SELECTION.md). Use [Benchmark](BENCHMARK.md) for observed transaction execution costs compared with historical context; it does not recommend routes, evaluate profitability or guarantee future fees.
+
 Call Execution Preflight when you already have one unsigned Base Mainnet transaction candidate and need evidence about likely call success, estimated L2 execution cost, explicit destination/cost constraints and unresolved issues before acting.
 
 Do not use it to generate an execution plan, route a swap or bridge, execute a transaction, verify wallet ownership, establish profitability, audit a contract or obtain a guaranteed total cost. Do not use it as an arbitrary RPC proxy.
@@ -13,10 +15,10 @@ Call [Execution Verification](VERIFICATION.md) after a transaction has been broa
 ## Discover the current contract
 
 1. Read [live OpenAPI](https://execution.dll.io/openapi.json).
-2. Read [capabilities](https://execution.dll.io/capabilities) and select the advertised operation: `/v2/execution/preflight` before execution or `/v2/execution/verify` afterward, both with POST.
+2. Read [capabilities](https://execution.dll.io/capabilities) and select the advertised POST operation: `/v2/execution/preflight` before execution, `/v2/execution/verify` for outcome checks afterward, or `/v1/benchmark/transactions` for historical cost context.
 3. [Well-known x402 metadata](https://execution.dll.io/.well-known/x402) describes Benchmark paid resource discovery. Preflight and Verification are separate free read-only capabilities: no SIWX, payment signature, wallet connection or payment is required for either.
 
-If the live contract differs from these guides, follow the live contract. Never adapt a request by inserting credentials or signing material.
+If the live contract differs from these guides, follow the live contract. Never put private keys or credentials in request bodies. Only Benchmark uses the explicitly documented SIWX/payment proof headers; do not add them to Preflight or Verification.
 
 ## Construct a request
 
@@ -36,12 +38,12 @@ Do not include unknown fields, nonce, RPC URL, gas/fee overrides, private keys, 
 
 HTTP 200 means an assessment was returned. It does **not** mean simulation succeeded, policy passed, execution happened or the candidate is advisable.
 
-| `judgment.state` | Agent handling |
-| --- | --- |
-| `PASS` | Evaluated checks passed without an identified material unresolved issue. Still inspect scope/limitations; DLL has not authorized execution. |
-| `CAUTION` | Inspect `judgment.reasons` and evidence. Resolve uncertainty relevant to your task before deciding; do not automatically promote this to PASS. |
-| `BLOCK` | Do not proceed with the unchanged candidate under the same constraints/evidence. Inspect the reason and correct the candidate or legitimate constraint. |
-| `INDETERMINATE` | Do not infer success or a deterministic revert. Obtain reliable evidence before deciding whether another assessment is useful. |
+| `judgment.state` | Agent handling                                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PASS`           | Evaluated checks passed without an identified material unresolved issue. Still inspect scope/limitations; DLL has not authorized execution.             |
+| `CAUTION`        | Inspect `judgment.reasons` and evidence. Resolve uncertainty relevant to your task before deciding; do not automatically promote this to PASS.          |
+| `BLOCK`          | Do not proceed with the unchanged candidate under the same constraints/evidence. Inspect the reason and correct the candidate or legitimate constraint. |
+| `INDETERMINATE`  | Do not infer success or a deterministic revert. Obtain reliable evidence before deciding whether another assessment is useful.                          |
 
 Also read `simulation.status`, `policy.status`, each cost component's `status`, `judgment.reasons`, `evidence` and `metadata.limitations`. Use machine-readable reason codes rather than parsing explanation text. Evidence references resolve to IDs within that response only.
 
@@ -79,3 +81,9 @@ DLL does not sign, broadcast, hold assets, choose nonces, authorize or autonomou
 9. Repeat only when new evidence is useful, such as after a pending transaction may have been included or a temporary observation failure has resolved. Honor retry guidance, use bounded retries, and do not poll blindly. A new call may observe different chain state; there is no idempotent-result replay guarantee.
 
 See [Verification](VERIFICATION.md) for copyable requests, state handling and exact error fields. Neither a Verification call nor an HTTP error requires a payment or wallet signature.
+
+## Benchmark integration rules
+
+Send 1–100 Base transaction hashes with optional `window` (`1h`, `24h`, `7d`; default `24h`). Follow the [Benchmark guide](BENCHMARK.md) for the complete SIWX identity-first / x402 payment flow. The current public path requires `Idempotency-Key`; keep the same key, wallet identity and exact body for retries/reconciliation. The first three valid analyses per verified wallet are free, then $0.005 per valid analysis; failed or invalid results neither incur charges nor consume the allowance.
+
+HTTP 200 is not all-items-success: inspect each result and the completed `billing` counts/status. A timeout does not prove no settlement happened. `PAYMENT_PENDING` permits same-key reconciliation only, never a second settlement. Never authorize payment implicitly from this guide or expose private keys. Service payment is separate from execution cost, ownership and execution authority. Benchmark remains the only paid x402 discovery resource.

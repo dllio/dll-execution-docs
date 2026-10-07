@@ -25,12 +25,12 @@ Agent has an unsigned transaction candidate
 → Agent decides what to do next
 ```
 
-| Judgment | Meaning within the evaluated evidence |
-| --- | --- |
-| `PASS` | Simulation and applicable checks passed, with no material unresolved issue identified. Not permission to execute. |
-| `CAUTION` | Execution may be technically possible, but important uncertainty or incomplete evidence remains. |
-| `BLOCK` | Deterministic evidence, such as a simulation revert or explicit constraint rejection, indicates not to proceed with this candidate. |
-| `INDETERMINATE` | Available evidence cannot support a reliable judgment. Do not treat it as success or a proven transaction failure. |
+| Judgment        | Meaning within the evaluated evidence                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `PASS`          | Simulation and applicable checks passed, with no material unresolved issue identified. Not permission to execute.                   |
+| `CAUTION`       | Execution may be technically possible, but important uncertainty or incomplete evidence remains.                                    |
+| `BLOCK`         | Deterministic evidence, such as a simulation revert or explicit constraint rejection, indicates not to proceed with this candidate. |
+| `INDETERMINATE` | Available evidence cannot support a reliable judgment. Do not treat it as success or a proven transaction failure.                  |
 
 Ordinary successful Preflight currently returns `CAUTION`: L1 data fee and total transaction cost are unavailable. None of these states evaluates profitability, investment quality, strategic desirability or financial advice.
 
@@ -45,18 +45,27 @@ Verification V0.1 observes an already-broadcast **Base Mainnet** transaction and
 
 Only `transaction_hash` is required. The default checks Base inclusion; request `receipt_status: "success"` explicitly to check receipt success. Read `verification.state`, not just HTTP status: `VERIFIED` means the requested checks are satisfied, `CONTRADICTED` means at least one check is contradicted, and `INDETERMINATE` means evidence is insufficient. These states do not establish finality, authorization, ownership, causality or profitability.
 
+## Available now: Execution-cost Benchmark
+
+`POST https://execution.dll.io/v1/benchmark/transactions`
+
+Benchmark compares observed Base Mainnet transaction costs with historical context. The current public path uses SIWX wallet identity and x402 USDC: the first three valid analyses per verified wallet are free, then $0.005 per valid analysis. HTTP 200 can contain unavailable per-item results; inspect each item and completed billing. Historical percentiles are not route recommendations, profitability judgments or future fee guarantees. See the [Benchmark guide](BENCHMARK.md) for the complete challenge and reconciliation flow.
+
 ## Start here
 
+- [Capability selection and FAQ](CAPABILITY_SELECTION.md): choose Preflight, Verification or Benchmark and understand their boundaries.
 - [Quickstart](QUICKSTART.md): make your first Preflight or Verification call.
 - [Agent integration instructions](AGENTS.md): when to call and how to interpret results.
 - [Preflight contract](PREFLIGHT.md): inputs, outputs, constraints and errors.
 - [Verification contract](VERIFICATION.md): inclusion, receipt/content checks, realized costs, observation states and errors.
+- [Benchmark contract](BENCHMARK.md): historical cost context, SIWX, allowance, x402 payment and safe reconciliation.
 - Preflight examples: [curl](examples/curl.sh), [JavaScript](examples/javascript.mjs), [Python](examples/python.py).
 - Verification examples: [curl](examples/verify-curl.sh), [JavaScript](examples/verify-javascript.mjs), [Python](examples/verify-python.py).
 
 ## Public discovery and canonical contract
 
-- [API origin](https://execution.dll.io): the API base URL, not a documentation homepage; `/` may return 404.
+- [API origin](https://execution.dll.io): compact capability selector and canonical integration links.
+- [Machine-readable index](https://execution.dll.io/llms.txt): index of authoritative public surfaces, not a duplicate API contract.
 - [Live OpenAPI](https://execution.dll.io/openapi.json): canonical API schemas and available operations.
 - [Capabilities](https://execution.dll.io/capabilities): currently available capabilities and their scope.
 - [x402 discovery manifest](https://execution.dll.io/.well-known/x402): Benchmark paid resource discovery; neither Preflight nor Verification requires x402 payment.

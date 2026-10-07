@@ -1,5 +1,7 @@
 # Quickstart: DLL Execution
 
+First [choose a capability](CAPABILITY_SELECTION.md): unsigned candidate → Preflight; already-broadcast transaction with explicit expectations → Verification; observed transaction costs with historical context → Benchmark. All three are Base Mainnet, read-only and non-custodial.
+
 Evaluate one unsigned Base Mainnet candidate before acting. Preflight is a limited free public trial and requires no API key, wallet signature or payment.
 
 Already have a broadcast transaction hash? Go to [first Verification request](#first-verification-request). Preflight evaluates a candidate before execution; Verification observes a transaction afterward.
@@ -46,16 +48,16 @@ curl requires curl and Bash; JavaScript requires Node.js 20+ with standard `fetc
 
 HTTP 200 returns these sections; values depend on observed chain state:
 
-| Section | What to inspect |
-| --- | --- |
-| `chain`, `candidate` | Supported chain and normalized evaluated candidate. |
-| `simulation` | `status`: `success`, `reverted` or `unavailable`; safe revert details when available. |
-| `cost_estimate` | `estimated_gas`, `execution_cost`, `l1_data_cost`, `total_transaction_cost`, with explicit availability. |
-| `policy` | `status` and individual caller-constraint `checks`; no supplied constraints means `not_configured`. |
-| `judgment` | `state`, machine-readable reasons and response-local evidence references. |
-| `evidence` | Observations supporting the result, linked by IDs. |
-| `metadata` | Observation time, snapshot, read-only flags and limitations. |
-| `historical_context` | Currently `unavailable`; no historical comparison is asserted. |
+| Section              | What to inspect                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `chain`, `candidate` | Supported chain and normalized evaluated candidate.                                                      |
+| `simulation`         | `status`: `success`, `reverted` or `unavailable`; safe revert details when available.                    |
+| `cost_estimate`      | `estimated_gas`, `execution_cost`, `l1_data_cost`, `total_transaction_cost`, with explicit availability. |
+| `policy`             | `status` and individual caller-constraint `checks`; no supplied constraints means `not_configured`.      |
+| `judgment`           | `state`, machine-readable reasons and response-local evidence references.                                |
+| `evidence`           | Observations supporting the result, linked by IDs.                                                       |
+| `metadata`           | Observation time, snapshot, read-only flags and limitations.                                             |
+| `historical_context` | Currently `unavailable`; no historical comparison is asserted.                                           |
 
 For an ordinary successful simulation, expect `simulation.status="success"` and usually `judgment.state="CAUTION"`, with `TOTAL_COST_INCOMPLETE`. The estimated L2 fee can be available while L1 data fee and complete cost remain unavailable. **Unavailable does not mean zero.** Do not convert that L2 estimate into a claimed total.
 
@@ -129,3 +131,20 @@ These examples use the explicit inclusion/success expectation, a timeout and no 
 HTTP 200 means an assessment was returned, not that verification passed. Read `verification.state`: `VERIFIED`, `CONTRADICTED` or `INDETERMINATE`, then inspect `verification.checks`, `verification.reasonCodes`, `outcome` and `observation_errors`. Not found, pending and provider unavailable are distinct observations; see the [Verification guide](VERIFICATION.md).
 
 Amounts in `realized_cost` are decimal strings or `null`. `realized_l2_execution_fee_wei` is gas used multiplied by effective gas price, not total execution cost. L1 may be available when observed, but total execution cost remains unavailable. Verification does not guarantee finality, prove wallet ownership, authorize execution or establish causality/profitability.
+
+## First Benchmark request
+
+Endpoint: `POST https://execution.dll.io/v1/benchmark/transactions`.
+
+```json
+{
+  "transaction_hashes": [
+    "0x6e0d0dc8cb8ee700ff723784444d2c02c2e5c17aeaef9b34136613cfee9cb01d"
+  ],
+  "window": "24h"
+}
+```
+
+Unlike free Preflight and Verification, the current Benchmark path requires an `Idempotency-Key` header and verified SIWX wallet identity. Begin with the [Benchmark challenge example](BENCHMARK.md#public-example-begin-the-challenge-flow), then follow the challenge before authorizing any payment. First three valid analyses per verified wallet are free; further valid analyses cost $0.005 each via x402 USDC. No execution transaction is created or broadcast.
+
+Inspect every `results` item and `billing`, not HTTP 200 alone. Historical percentiles are not future fees or route recommendations. Keep the same key/body/identity for reconciliation; never create a second settlement for `PAYMENT_PENDING`. See [Benchmark](BENCHMARK.md) for precise pricing, response, limitations and errors.

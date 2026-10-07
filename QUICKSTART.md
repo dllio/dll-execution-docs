@@ -1,6 +1,8 @@
-# Quickstart: Execution Preflight
+# Quickstart: DLL Execution
 
 Evaluate one unsigned Base Mainnet candidate before acting. Preflight is a limited free public trial and requires no API key, wallet signature or payment.
+
+Already have a broadcast transaction hash? Go to [first Verification request](#first-verification-request). Preflight evaluates a candidate before execution; Verification observes a transaction afterward.
 
 ## First safe request
 
@@ -82,3 +84,48 @@ This is a **constraints fragment**, not a complete request. Place it under the t
 Simulation is read-only and snapshot-specific; later state may differ. It does not guarantee funding, future inclusion, success or desired application effects. DLL does not prove ownership of `from`, sign, broadcast, hold assets or authorize execution. Profitability and strategic desirability are not evaluated.
 
 Next: [Agent instructions](AGENTS.md), [detailed contract](PREFLIGHT.md), and the canonical [live OpenAPI](https://execution.dll.io/openapi.json).
+
+## First Verification request
+
+Endpoint: `POST https://execution.dll.io/v2/execution/verify`.
+
+Only `transaction_hash` is required. This public historical Base ETH transfer is used as an example; DLL does not create or resend it:
+
+```json
+{
+  "transaction_hash": "0x966ca06d5fd53a1d07ca7adb1f43b92958bab0c1f3cc0f86deacdf10a3738533"
+}
+```
+
+The default checks Base Mainnet and inclusion only, **not receipt success**. For inclusion and success, send:
+
+```json
+{
+  "transaction_hash": "0x966ca06d5fd53a1d07ca7adb1f43b92958bab0c1f3cc0f86deacdf10a3738533",
+  "expectation": {
+    "chain_id": "8453",
+    "inclusion": "included",
+    "receipt_status": "success"
+  }
+}
+```
+
+Choose one single-request example:
+
+```sh
+bash examples/verify-curl.sh
+```
+
+```sh
+node examples/verify-javascript.mjs
+```
+
+```sh
+python3 examples/verify-python.py
+```
+
+These examples use the explicit inclusion/success expectation, a timeout and no automatic retries. They require the same standard tools as the Preflight examples and no wallet, private key, account or payment. They only read an independently broadcast transaction.
+
+HTTP 200 means an assessment was returned, not that verification passed. Read `verification.state`: `VERIFIED`, `CONTRADICTED` or `INDETERMINATE`, then inspect `verification.checks`, `verification.reasonCodes`, `outcome` and `observation_errors`. Not found, pending and provider unavailable are distinct observations; see the [Verification guide](VERIFICATION.md).
+
+Amounts in `realized_cost` are decimal strings or `null`. `realized_l2_execution_fee_wei` is gas used multiplied by effective gas price, not total execution cost. L1 may be available when observed, but total execution cost remains unavailable. Verification does not guarantee finality, prove wallet ownership, authorize execution or establish causality/profitability.

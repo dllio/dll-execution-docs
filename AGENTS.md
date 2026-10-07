@@ -8,11 +8,13 @@ Call Execution Preflight when you already have one unsigned Base Mainnet transac
 
 Do not use it to generate an execution plan, route a swap or bridge, execute a transaction, verify wallet ownership, establish profitability, audit a contract or obtain a guaranteed total cost. Do not use it as an arbitrary RPC proxy.
 
+Call [Execution Verification](VERIFICATION.md) after a transaction has been broadcast independently, when you need to inspect its observed Base Mainnet outcome against narrow expectations. You do not need a prior DLL Preflight. Do not use Verification to prove authorization, wallet ownership, Agent identity, intent, causality, finality or application-specific postconditions.
+
 ## Discover the current contract
 
 1. Read [live OpenAPI](https://execution.dll.io/openapi.json).
-2. Use `POST https://execution.dll.io/v2/execution/preflight` if the operation is advertised.
-3. [Well-known x402 metadata](https://execution.dll.io/.well-known/x402) describes existing paid resource discovery. Preflight is a separate limited free trial: no SIWX, payment signature, wallet connection or payment is required.
+2. Read [capabilities](https://execution.dll.io/capabilities) and select the advertised operation: `/v2/execution/preflight` before execution or `/v2/execution/verify` afterward, both with POST.
+3. [Well-known x402 metadata](https://execution.dll.io/.well-known/x402) describes Benchmark paid resource discovery. Preflight and Verification are separate free read-only capabilities: no SIWX, payment signature, wallet connection or payment is required for either.
 
 If the live contract differs from these guides, follow the live contract. Never adapt a request by inserting credentials or signing material.
 
@@ -63,3 +65,17 @@ For HTTP 429, honor `Retry-After` or `error.retry_after_seconds` when provided. 
 ## Safety
 
 DLL does not sign, broadcast, hold assets, choose nonces, authorize or autonomously execute this candidate. It does not prove ownership of `from`, validate all application effects or guarantee future success. Keep all secrets out of the request. Any downstream execution requires your own separate authority, safety checks and tools.
+
+## Verification integration rules
+
+1. Send `transaction_hash`, a `0x`-prefixed 32-byte hexadecimal hash, to `POST https://execution.dll.io/v2/execution/verify`.
+2. Without `expectation`, the checks default to `chain_id="8453"` and `inclusion="included"`. This does **not** check receipt success. To check success, explicitly set `expectation.receipt_status="success"`; use `"reverted"` only when that is your intended expectation.
+3. Optional `expectation.candidate` uses the same five candidate fields described above. Verification compares observed transaction content; it does not execute the candidate or prove ownership of `from`. Do not add Preflight `constraints` to a Verification request.
+4. On HTTP 200, inspect `verification.state`, `verification.checks`, `verification.reasonCodes`, `outcome` and `observation_errors`. `VERIFIED` applies only to requested checks. `CONTRADICTED` identifies at least one deterministic mismatch. `INDETERMINATE` preserves insufficient evidence. A reverted receipt can satisfy an explicit reverted-status expectation.
+5. Use `outcome.inclusion` to distinguish `included`, `pending`, `not_found` and `unknown`. A pending observation can contradict an included expectation. A not-found observation is not proof of permanent absence. Provider failures appear in `observation_errors`; never reinterpret them as transaction absence.
+6. Inspect `outcome.receipt.availability` and `outcome.canonicality`. Missing receipt evidence prevents verifying a requested receipt-status check; it does not automatically invalidate a narrower inclusion-only assessment. Unknown canonicality does not establish finality or necessarily make every check indeterminate. See [observation states](VERIFICATION.md#transaction-observation-states).
+7. Keep `realized_cost` decimal-string values as strings or exact integers. L2 fee equals gas used times effective gas price. L1 may be observed; total cost is currently unavailable. Never substitute L2 fee for total cost or infer zero from `null`.
+8. Treat `outcome.finality` and `metadata.finality` as unknown/unavailable, not finalized. Do not infer permission, actor identity, causality, economic correctness or prediction accuracy from a result.
+9. Repeat only when new evidence is useful, such as after a pending transaction may have been included or a temporary observation failure has resolved. Honor retry guidance, use bounded retries, and do not poll blindly. A new call may observe different chain state; there is no idempotent-result replay guarantee.
+
+See [Verification](VERIFICATION.md) for copyable requests, state handling and exact error fields. Neither a Verification call nor an HTTP error requires a payment or wallet signature.

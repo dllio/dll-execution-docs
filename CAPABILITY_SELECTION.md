@@ -27,6 +27,8 @@ Use the advertised operation, not an inferred capability. A prior DLL Preflight 
 
 DLL supplies normalized, versioned product results: Preflight simulation/cost/constraints/judgment, Verification expectation checks, and Benchmark historical cost context. These include evidence and explicit unknown states, rather than requiring each agent to assemble and interpret raw observations. DLL is not an arbitrary RPC proxy, a cryptographic proof service or a substitute for independent checks outside its stated scope.
 
+For Base transaction analysis, choose the question first: estimated execution fee and constraints before acting (Preflight), realized execution fee and explicit transaction expectations after broadcast (Verification), or historical execution-cost percentiles for observed transactions (Benchmark). None predicts profitability or supplies execution authority.
+
 ### When should I use Preflight, Verification or Benchmark?
 
 Use [Preflight](PREFLIGHT.md) before acting on an unsigned candidate; use [Verification](VERIFICATION.md) after broadcast to check explicit expectations; use [Benchmark](BENCHMARK.md) to compare observed transaction costs with historical context. The selection table above gives the canonical paths.
@@ -59,6 +61,8 @@ Preflight may estimate the L2 fee; its L1 and total transaction cost are unavail
 
 Preflight and Verification are free and do not require SIWX or x402. Benchmark uses a verified-wallet allowance of three valid analyses, then $0.005 per valid analysis, not per submitted hash. Failed/invalid results do not consume that allowance or incur a charge. [Pricing](https://execution.dll.io/pricing) and [payment metadata](https://execution.dll.io/payment) are authoritative live terms; [Benchmark](BENCHMARK.md) explains the flow.
 
+A paid N-hash Benchmark quote authorizes at most N × 5000 atomic USDC. The actual settlement is separate and may be lower after free reservations and valid-item counting. Nonempty anonymous accepts does not force free users to pay: follow `X-DLL-Benchmark-Stage` and the [bounded client reference](BENCHMARK_CLIENT.md).
+
 ### How does an agent call each capability?
 
 Read [OpenAPI](https://execution.dll.io/openapi.json), choose an advertised POST path, and send the guide's JSON request with `Content-Type: application/json`. [Quickstart](QUICKSTART.md) contains examples. Benchmark additionally requires `Idempotency-Key` and SIWX on the current public payment path; use its [complete integration guide](BENCHMARK.md) before authorizing payment.
@@ -74,3 +78,7 @@ Use the observations, stable reason codes, response-local references, availabili
 ### What should an agent do before and after execution?
 
 Before execution, obtain Preflight evidence and make its own separately authorized decision, resolving uncertainties relevant to the task. After independent broadcast, use Verification with explicit expectations. Use Benchmark only when historical cost context is useful. Matching outcomes do not prove causality or prediction accuracy. DLL never supplies signing or execution authority.
+
+### Where can an Agent discover DLL, and what remains unproven?
+
+Start at the [API origin](https://execution.dll.io/), then [llms.txt](https://execution.dll.io/llms.txt), [OpenAPI](https://execution.dll.io/openapi.json), [capabilities](https://execution.dll.io/capabilities) and these public guides. Crawl hints and sitemap enumerate only public documents. Benchmark alone is advertised through the existing x402 manifest and Bazaar declaration; discovery metadata and validator acceptance do not establish directory listing or successful payment. Bazaar and its hosted MCP search require actual catalog visibility. Do not assume that a marketplace payment proxy preserves DLL's SIWX, Idempotency-Key or partial-settlement flow. Real production payment and generic-client validation remain separate exercises.

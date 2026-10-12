@@ -49,7 +49,7 @@ Only `transaction_hash` is required. The default checks Base inclusion; request 
 
 `POST https://execution.dll.io/v1/benchmark/transactions`
 
-Benchmark compares observed Base Mainnet transaction costs with historical context. The current public path uses SIWX wallet identity and x402 USDC: the first three valid analyses per verified wallet are free, then $0.005 per valid analysis. HTTP 200 can contain unavailable per-item results; inspect each item and completed billing. Historical percentiles are not route recommendations, profitability judgments or future fee guarantees. See the [Benchmark guide](BENCHMARK.md) for the complete challenge and reconciliation flow.
+Benchmark compares observed Base Mainnet transaction costs with historical context. The public path uses SIWX wallet identity and x402 v2 `upto` USDC: the first three valid analyses per verified wallet are free, then $0.005 per delivered valid analysis. Anonymous nonempty payment quotes do not force free-eligible wallets to pay. A paid N-hash batch quotes a maximum of N × 5000 atomic USDC; actual settlement counts only valid paid items. HTTP 200 can contain unavailable items; inspect completed billing. Historical percentiles are not route recommendations, profitability judgments or future fee guarantees. See the [Benchmark guide](BENCHMARK.md) and [bounded SDK client reference](BENCHMARK_CLIENT.md).
 
 ## Start here
 
@@ -59,6 +59,7 @@ Benchmark compares observed Base Mainnet transaction costs with historical conte
 - [Preflight contract](PREFLIGHT.md): inputs, outputs, constraints and errors.
 - [Verification contract](VERIFICATION.md): inclusion, receipt/content checks, realized costs, observation states and errors.
 - [Benchmark contract](BENCHMARK.md): historical cost context, SIWX, allowance, x402 payment and safe reconciliation.
+- [Benchmark client reference](BENCHMARK_CLIENT.md): stage-aware identity/payment negotiation with independent spending authorization, not a generic-client compatibility guarantee.
 - Preflight examples: [curl](examples/curl.sh), [JavaScript](examples/javascript.mjs), [Python](examples/python.py).
 - Verification examples: [curl](examples/verify-curl.sh), [JavaScript](examples/verify-javascript.mjs), [Python](examples/verify-python.py).
 
@@ -66,11 +67,14 @@ Benchmark compares observed Base Mainnet transaction costs with historical conte
 
 - [API origin](https://execution.dll.io): compact capability selector and canonical integration links.
 - [Machine-readable index](https://execution.dll.io/llms.txt): index of authoritative public surfaces, not a duplicate API contract.
+- [Public sitemap](https://execution.dll.io/sitemap.xml) and [crawl hints](https://execution.dll.io/robots.txt): explicitly advertised public GET documents; not authentication or proof of indexing.
 - [Live OpenAPI](https://execution.dll.io/openapi.json): canonical API schemas and available operations.
 - [Capabilities](https://execution.dll.io/capabilities): currently available capabilities and their scope.
 - [x402 discovery manifest](https://execution.dll.io/.well-known/x402): Benchmark paid resource discovery; neither Preflight nor Verification requires x402 payment.
 
 This repository explains what DLL does and how to use it. **Live OpenAPI, well-known metadata and actual API responses are the canonical public contract.** It is not an implementation/source-code mirror.
+
+Documentation checks run offline with `node --test test/*.test.mjs`: local links, JSON syntax and bounded client safety behavior. They create no real signatures, payments or blockchain requests. Full examples are additionally checked against canonical product schemas during release validation.
 
 ## Limitations and security boundary
 

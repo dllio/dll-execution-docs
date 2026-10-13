@@ -53,6 +53,7 @@ Benchmark compares observed Base Mainnet transaction costs with historical conte
 
 ## Start here
 
+- [Remote MCP](MCP.md): two free read-only tools and standard client setup; no wallet or payment.
 - [Capability selection and FAQ](CAPABILITY_SELECTION.md): choose Preflight, Verification or Benchmark and understand their boundaries.
 - [Quickstart](QUICKSTART.md): make your first Preflight or Verification call.
 - [Agent integration instructions](AGENTS.md): when to call and how to interpret results.

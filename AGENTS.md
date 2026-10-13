@@ -14,6 +14,8 @@ Call [Execution Verification](VERIFICATION.md) after a transaction has been broa
 
 ## Discover the current contract
 
+Remote-MCP clients can connect to `https://execution.dll.io/mcp` and select `preflight_transaction` or `verify_transaction`. See [MCP setup and result interpretation](MCP.md). OpenAPI clients can use stable operation IDs `preflightTransaction`, `verifyTransaction` and `benchmarkTransactions`; importing the specification does not authorize Benchmark payment.
+
 1. Read [live OpenAPI](https://execution.dll.io/openapi.json).
 2. Read [capabilities](https://execution.dll.io/capabilities) and select the advertised POST operation: `/v2/execution/preflight` before execution, `/v2/execution/verify` for outcome checks afterward, or `/v1/benchmark/transactions` for historical cost context.
 3. [Well-known x402 metadata](https://execution.dll.io/.well-known/x402) describes Benchmark paid resource discovery. Preflight and Verification are separate free read-only capabilities: no SIWX, payment signature, wallet connection or payment is required for either.

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.dllio/dll-execution",
+  "title": "DLL Execution",
+  "description": "Free read-only Base Mainnet transaction Preflight and Verification; no signing or custody.",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/dllio/dll-execution-docs",
+    "source": "github"
+  },
+  "remotes": [
+    { "type": "streamable-http", "url": "https://execution.dll.io/mcp" }
+  ]
+}

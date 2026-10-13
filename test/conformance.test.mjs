@@ -166,6 +166,7 @@ test("public local links, JSON syntax and handshake guidance remain coherent", a
     "VERIFICATION.md",
     "BENCHMARK.md",
     "BENCHMARK_CLIENT.md",
+    "MCP.md",
   ]) {
     const text = await readFile(new URL("../" + file, import.meta.url), "utf8");
     assert.doesNotMatch(

@@ -13,6 +13,8 @@ MCP adapter version: **0.1.0**. No API key, wallet connection, SIWX proof or pay
 
 Input arguments are the JSON request bodies of the existing APIs. Use `tools/list` for the current input/output schemas. Tools follow public capability availability; an unavailable capability is not advertised. Benchmark and payment tools are not exposed through this MCP adapter.
 
+The existing `preflight_transaction` tool also accepts the [optional network fee context](PREFLIGHT.md#optional-network-fee-estimate). It returns the same separate versioned `network_fee_estimate` as HTTP. This adds no tool, wallet/payment authority or spending guarantee, and does not recompute legacy Judgment. Default tool arguments and result interpretation are unchanged; do not invent missing fee fields.
+
 ## Connect
 
 For a remote-MCP-capable client, choose Streamable HTTP and the URL above. For example, xAI Responses API accepts this entry in its `tools` array:

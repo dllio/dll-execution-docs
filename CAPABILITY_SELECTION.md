@@ -55,7 +55,7 @@ A product response is available. Inspect Preflight `judgment` and `simulation`, 
 
 ### What costs are known versus unavailable?
 
-Preflight may estimate the L2 fee; its L1 and total transaction cost are unavailable. Verification computes realized L2 fee using exact gas-used × effective-gas-price arithmetic; L1 may be observed, but total remains unavailable. Benchmark cost percentiles are historical and availability-dependent. Keep ETH execution cost separate from USDC DLL service payment. A null/unavailable amount is not zero. See each capability's cost section.
+Default Preflight `cost_estimate` covers the L2 fee; its L1/total remain unavailable. An [explicit fee-context opt-in](PREFLIGHT.md#optional-network-fee-estimate) can return a separate conditional estimate covering L2, L1 and applicable operator network fees. It does not change legacy Judgment or provide a future spending guarantee; missing components keep total unavailable. Verification computes realized L2 fee using exact gas-used × effective-gas-price arithmetic; L1 may be observed, but total remains unavailable. Benchmark cost percentiles are historical and availability-dependent. Keep ETH execution cost separate from USDC DLL service payment. A null/unavailable amount is not zero. See each capability's cost section.
 
 ### What is free versus paid?
 

@@ -22,7 +22,7 @@ Send `Content-Type: application/json`, with required `candidate` and optional `c
 
 Addresses may be uniform-case or valid mixed-case checksum addresses; output addresses are lowercase. `value` and cost constraints must fit an unsigned 256-bit integer. Do not use hexadecimal or floating-point amounts, signs or leading zeros except the single string `"0"`. Chain ID, gas, wei and fee amounts use strings where the schema specifies strings; preserve them without floating-point conversion.
 
-Decoded calldata is limited to 64 KiB; each destination list accepts at most 100 entries. These are input-schema bounds, not advice to submit large workloads. Unknown fields are rejected. No contract creation, nonce, caller-selected RPC URL, state overrides, signature or gas/fee override fields are supported. See [Quickstart](QUICKSTART.md) for a complete safe example.
+Decoded calldata is limited to 64 KiB; each destination list accepts at most 100 entries. These are input-schema bounds, not advice to submit large workloads. Unknown fields are rejected. No contract creation, nonce in `candidate`, caller-selected RPC URL, state overrides or signatures are accepted. The optional fee context below supplies encoding inputs only; it does not override the original simulation. See [Quickstart](QUICKSTART.md) for a complete safe example.
 
 ## Constraints and policy
 
@@ -65,6 +65,53 @@ No transaction is signed, submitted, included or mined by Preflight. Simulation 
 Known L2 fee is estimated gas multiplied by the observed gas-price quote. Both are estimates, not realized receipt fees or guaranteed future prices. The native fee representation is ETH/wei, not USD. `candidate.value` is transferred native value in the candidate, not an execution fee.
 
 Unavailable components are **unknown, not zero**. Never label L2-only cost as total execution cost, and never treat `max_execution_cost_wei` passing as proof that a complete spending budget is satisfied. If the result is insufficient for your decision, obtain the missing evidence separately rather than inventing a fee.
+
+## Optional network fee estimate
+
+To request a separate versioned estimate, add `fee_estimation`. Default requests and their responses are unchanged. This synthetic example models a zero-value USDC balance read, not a signed transaction:
+
+```json
+{
+  "candidate": {
+    "chain_id": "8453",
+    "from": "0x1111111111111111111111111111111111111111",
+    "to": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "value": "0",
+    "data": "0x70a082310000000000000000000000001111111111111111111111111111111111111111"
+  },
+  "fee_estimation": {
+    "version": "base_network_fee_v1",
+    "transaction": {
+      "type": "eip1559",
+      "nonce": "0",
+      "gas_limit": "70000",
+      "max_fee_per_gas": "1000000000",
+      "max_priority_fee_per_gas": "1000000",
+      "access_list": []
+    }
+  }
+}
+```
+
+All six transaction fields are required when `transaction` is supplied. Only EIP-1559 and an empty access list are supported. Nonce is a decimal string from 0 to 9007199254740991; gas limit is 21000–5000000. Fee caps are uint256 decimal strings and priority cannot exceed max fee. These inputs do not sign, authorize, configure a wallet or set simulation gas. No nonce lookup or placeholder fee values are invented.
+
+The opt-in response adds `network_fee_estimate`, version `base_network_fee_estimate_v1`, with `basis="estimated"`, ETH/wei amounts, its own `input_digest`, snapshot, bounded evidence references, assumptions and:
+
+| Field | Meaning |
+| --- | --- |
+| `components.l2_execution_fee` | Estimated gas × min(max fee, snapshot base fee + priority fee). |
+| `components.l1_data_fee` | Oracle estimate for the supplied unsigned transaction encoding. Signature/compression modeling is not exact signed-byte pricing. |
+| `components.operator_fee` | Observed Oracle estimate for estimated gas; an observed zero is distinct from unavailable. |
+| `total_network_fee` | Exact integer sum only when every required component is available. Otherwise unavailable/null, never a partial sum labeled total. |
+| `status` | `complete`, `partial` or `unavailable`; completeness describes this model's component coverage, not future accuracy. |
+
+Each component and total uses `status`, `estimated_amount_wei`, `reason_code` and `evidence_refs`. Inspect returned availability and assumptions. Missing `transaction` produces `FEE_ENVELOPE_REQUIRED`; malformed or partially supplied fields are HTTP 400. Unsupported Provider/fork, failed Oracle, missing base fee, cap below base fee, insufficient declared gas or invalidated snapshot leave affected estimates unavailable. Do not turn null into zero or retry indefinitely.
+
+This version covers ordinary Base Mainnet EIP-1559 network fees, not account-abstraction/bundler/paymaster fees, deposit/native-special transaction types, nonempty access lists, transfer principal, token/protocol charges, other transactions' approvals or DLL service payment. It neither proves nonce/funding readiness nor simulates under the declared gas limit. State, signature bytes, inclusion time and fee conditions can differ at actual execution.
+
+**Legacy `cost_estimate`, Judgment and `max_execution_cost_wei` are deliberately unchanged.** A complete optional estimate does not remove legacy `TOTAL_COST_INCOMPLETE` or turn CAUTION into PASS. The old constraint still uses the original independent L2 gas-price quote, not this envelope-based total. The root `metadata.input_digest` retains its original meaning; the fee estimate's separate digest includes fee inputs. Neither digest proves identity or authorization.
+
+Never treat `complete` as a guaranteed future spending cap, realized fee or permission to execute. If you require unsupported transaction semantics or exact future cost, this estimate cannot supply that assurance.
 
 ## Judgment
 

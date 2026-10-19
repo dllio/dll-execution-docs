@@ -6,7 +6,7 @@ Use this guide to integrate the public API. It does not grant authority to sign,
 
 Start with [capability selection and FAQ](CAPABILITY_SELECTION.md). Use [Benchmark](BENCHMARK.md) for observed transaction execution costs compared with historical context; it does not recommend routes, evaluate profitability or guarantee future fees.
 
-Call Execution Preflight when you already have one unsigned Base Mainnet transaction candidate and need evidence about likely call success, estimated L2 execution cost, explicit destination/cost constraints and unresolved issues before acting.
+Call Execution Preflight when you already have one unsigned Base Mainnet transaction candidate and need evidence about likely call success, estimated L2 execution cost, explicit destination/cost constraints and unresolved issues before acting. With explicit transaction encoding inputs, you can also request a [separate conditional network fee estimate](PREFLIGHT.md#optional-network-fee-estimate).
 
 Do not use it to generate an execution plan, route a swap or bridge, execute a transaction, verify wallet ownership, establish profitability, audit a contract or obtain a guaranteed total cost. Do not use it as an arbitrary RPC proxy.
 
@@ -34,7 +34,7 @@ Send JSON with a `candidate` containing all five fields:
 
 Optionally include `constraints.max_execution_cost_wei`, `constraints.allowed_to` or `constraints.denied_to`. The cost constraint covers **estimated L2 fee only**, not total cost or transferred value. Lists match the top-level destination only; deny wins over allow.
 
-Do not include unknown fields, nonce, RPC URL, gas/fee overrides, private keys, signatures or wallet secrets. See [Quickstart](QUICKSTART.md) for a safe request and [Preflight](PREFLIGHT.md) for exact supported constraints.
+Do not include unknown fields, nonce in `candidate`, RPC URL, private keys, signatures or wallet secrets. Optional `fee_estimation` supplies explicit EIP-1559 encoding inputs; it does not override simulation gas or legacy constraints. Do not invent missing fee inputs. See [Quickstart](QUICKSTART.md) for a safe default request and [Preflight](PREFLIGHT.md) for supported constraints and the opt-in contract.
 
 ## Interpret results, not just HTTP status
 
@@ -56,11 +56,12 @@ Also read `simulation.status`, `policy.status`, each cost component's `status`, 
 - Complete transaction cost is currently unavailable at `cost_estimate.total_transaction_cost`.
 - Missing amounts are `null`, not zero. Never substitute the L2 estimate for a full-cost budget.
 - Ordinary successful assessments currently remain `CAUTION` because total cost is incomplete.
+- These fields describe the legacy `cost_estimate`. Opt-in `network_fee_estimate` separately estimates L2, L1 data and applicable operator fees; its total is available only when all required components are available. It never changes legacy Judgment, the L2-only cost constraint or the root input digest. `complete` describes modeled coverage, not exact signed-transaction cost, a future spending cap or permission to execute.
 - `judgment.economic_profitability` and `judgment.strategic_desirability` are `"not_evaluated"`. No state implies investment quality, financial advice or application-level economic value.
 
 ## Freshness and repeated calls
 
-Inspect `metadata.observed_at` and `metadata.snapshot`. Simulation and gas-estimate observations relate to the reported snapshot; the fee quote has its own observation time and is not snapshot-bound. A later Preflight may use newer chain state and return a different result.
+Inspect `metadata.observed_at` and `metadata.snapshot`. Simulation and gas-estimate observations relate to the reported snapshot; the legacy gas-price quote has its own observation time and is not snapshot-bound. The optional network fee estimate records its own snapshot and hash-bound fee observations. A later Preflight may use newer chain state and return a different result; neither fee model guarantees realized cost.
 
 Repeat only when it adds value, such as after a material candidate/constraint change or when fresh evidence is needed. Do not poll blindly, rotate identities/IPs to evade admission limits or retry indefinitely. Preflight has no idempotent-result replay guarantee; repeating it may perform a new assessment.
 

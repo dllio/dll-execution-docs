@@ -1,12 +1,8 @@
-# DLL Execution
+# DLL Execution — Base transaction simulation and verification for AI agents
 
 Execution infrastructure for AI agents.
 
-DLL helps AI Agents make better decisions before onchain execution and inspect observed outcomes afterward, with evidence intended to reduce downstream friction, execution cost and avoidable failures.
-
-> Any Agent that wants to get something done onchain can call DLL.
-
-This is the north star, not a claim of universal chain support or autonomous execution today.
+DLL is an independent, read-only Base Mainnet API and remote MCP service. Before signing, simulate an unsigned transaction, inspect call success or revert, and check explicit destination and L2 execution fee constraints. After independent broadcast, verify inclusion, requested receipt status and supported transaction-field expectations. Results include structured Judgment or Verification states, reason codes, evidence and explicit uncertainty; DLL never signs, broadcasts or takes custody.
 
 ## Who it is for
 
@@ -17,6 +13,8 @@ AI Agents with an unsigned transaction candidate or an already-broadcast transac
 `POST https://execution.dll.io/v2/execution/preflight`
 
 V0.2.1 evaluates **one unsigned Base Mainnet transaction candidate** and returns read-only simulation, an estimated L2 execution fee, deterministic policy checks, structured judgment and supporting evidence. It is a limited free public trial; no wallet connection, signature or payment is needed for Preflight. Benchmark's separate payment/free-trial rules do not apply to this endpoint.
+
+With complete supported EIP-1559 transaction context, [optional `fee_estimation`](PREFLIGHT.md#optional-network-fee-estimate) returns a separate conditional estimate of L1 data, L2 execution, applicable Operator Fee and Total Network Fee. Missing necessary components keep total unavailable, not zero. The estimate is not realized cost, a future spending guarantee or an automatic PASS.
 
 ```text
 Agent has an unsigned transaction candidate
@@ -32,7 +30,7 @@ Agent has an unsigned transaction candidate
 | `BLOCK`         | Deterministic evidence, such as a simulation revert or explicit constraint rejection, indicates not to proceed with this candidate. |
 | `INDETERMINATE` | Available evidence cannot support a reliable judgment. Do not treat it as success or a proven transaction failure.                  |
 
-Ordinary successful Preflight currently returns `CAUTION`: L1 data fee and total transaction cost are unavailable. None of these states evaluates profitability, investment quality, strategic desirability or financial advice.
+Ordinary successful Preflight currently returns `CAUTION` because legacy `cost_estimate` L1/total remain unavailable. A complete optional `network_fee_estimate` does not recompute legacy Judgment or the L2-only cost constraint. None of these states evaluates profitability, investment quality, strategic desirability or financial advice.
 
 ## Available now: Execution Verification
 
@@ -81,6 +79,6 @@ Documentation checks run offline with `node --test test/*.test.mjs`: local links
 
 Base Mainnet only. Preflight accepts unsigned candidates; Verification accepts already-broadcast transaction hashes. No signing, broadcasting, custody or autonomous execution. DLL does not prove ownership of the supplied `from` address or authorize a transaction.
 
-Simulation describes observed chain state; it does not guarantee future inclusion, success or application-level outcomes. The known L2 fee estimate is **not total execution cost**. An unavailable fee is unknown, not zero. Keep private keys, credentials and other secrets out of requests. The Agent remains responsible for any later action.
+Simulation describes observed chain state; it does not guarantee future inclusion, success or application-level outcomes. The default L2-only fee is **not total execution cost**; optional network fee completeness describes only the supported conditional model. An unavailable fee is unknown, not zero. DLL does not verify net asset changes, comprehensively scan malicious contracts or guarantee Swap economic results. Keep private keys, credentials and other secrets out of requests. The Agent remains responsible for any later action.
 
 Verification checks only the supplied expectations. Included, successful and canonical observations are not finalized-state guarantees. Its realized L2 fee is not total cost; total execution cost currently remains unavailable even if an L1 fee is observed.

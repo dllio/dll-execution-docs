@@ -1,4 +1,4 @@
-# DLL Execution: remote MCP
+# DLL Execution: free Base transaction simulation and verification over remote MCP
 
 DLL provides two free, read-only Base Mainnet tools over Streamable HTTP:
 
@@ -8,12 +8,14 @@ MCP adapter version: **0.1.0**. No API key, wallet connection, SIWX proof or pay
 
 | Tool                    | When to select it                                                                | Canonical contract              |
 | ----------------------- | -------------------------------------------------------------------------------- | ------------------------------- |
-| `preflight_transaction` | Before execution, assess an existing unsigned candidate                          | [Preflight](PREFLIGHT.md)       |
-| `verify_transaction`    | After independent broadcast, inspect a transaction against explicit expectations | [Verification](VERIFICATION.md) |
+| `preflight_transaction` | Before signing, simulate an unsigned Base candidate; inspect revert and destination/L2 fee constraints | [Preflight](PREFLIGHT.md)       |
+| `verify_transaction`    | After independent broadcast, check Base inclusion, requested receipt status and optional candidate fields | [Verification](VERIFICATION.md) |
 
 Input arguments are the JSON request bodies of the existing APIs. Use `tools/list` for the current input/output schemas. Tools follow public capability availability; an unavailable capability is not advertised. Benchmark and payment tools are not exposed through this MCP adapter.
 
 The existing `preflight_transaction` tool also accepts the [optional network fee context](PREFLIGHT.md#optional-network-fee-estimate). It returns the same separate versioned `network_fee_estimate` as HTTP. This adds no tool, wallet/payment authority or spending guarantee, and does not recompute legacy Judgment. Default tool arguments and result interpretation are unchanged; do not invent missing fee fields.
+
+Choose these tools for scoped transaction evidence, not wallet actions, net token-balance changes, comprehensive malicious-contract scanning or Swap economic-goal verification. Default Verification checks inclusion, not receipt success; request receipt status explicitly. A connected MCP server is not automatically selected by an Agent, and a directory listing does not grant a client permission to use external tools.
 
 ## Connect
 

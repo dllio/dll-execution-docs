@@ -5,6 +5,59 @@ import { benchmarkWithAuthorizedWallet } from "../examples/benchmark-handshake.m
 const url = "https://execution.dll.io/v1/benchmark/transactions";
 const payTo = "0x2222222222222222222222222222222222222222";
 const body = { transaction_hashes: ["0x" + "1".repeat(64)], window: "7d" };
+
+test("task selection and fee descriptions preserve the current conditional scope", async () => {
+  const files = [
+    "README.md",
+    "PREFLIGHT.md",
+    "MCP.md",
+    "AGENTS.md",
+    "CAPABILITY_SELECTION.md",
+  ];
+  const docs = Object.fromEntries(
+    await Promise.all(
+      files.map(async (file) => [
+        file,
+        await readFile(new URL("../" + file, import.meta.url), "utf8"),
+      ]),
+    ),
+  );
+  assert.match(
+    docs["README.md"],
+    /^# DLL Execution — Base transaction simulation and verification for AI agents/m,
+  );
+  assert.match(
+    docs["README.md"],
+    /L1 data, L2 execution, applicable Operator Fee and Total Network Fee/,
+  );
+  assert.match(docs["README.md"], /does not recompute legacy Judgment/);
+  assert.doesNotMatch(
+    docs["README.md"],
+    /CAUTION`: L1 data fee and total transaction cost are unavailable/,
+  );
+  assert.match(
+    docs["PREFLIGHT.md"],
+    /separate \[conditional network fee estimate\]/,
+  );
+  assert.match(docs["MCP.md"], /does not recompute legacy Judgment/);
+  assert.match(
+    docs["MCP.md"],
+    /directory listing does not grant a client permission/,
+  );
+  assert.match(docs["AGENTS.md"], /network_fee_estimate/);
+  assert.match(docs["AGENTS.md"], /not exact signed-transaction cost/);
+  assert.match(
+    docs["CAPABILITY_SELECTION.md"],
+    /net asset-delta verification, comprehensive malicious-contract scanning/,
+  );
+  for (const text of Object.values(docs)) {
+    assert.match(text, /Base Mainnet/);
+    assert.doesNotMatch(
+      text,
+      /\/ops\b|BASE_RPC_URL|DATABASE_URL|CDP_API_KEY|evaluation_work_v1/,
+    );
+  }
+});
 function challenge(stage, extra = {}) {
   const required = {
     x402Version: 2,

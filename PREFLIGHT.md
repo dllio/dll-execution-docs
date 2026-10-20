@@ -1,6 +1,6 @@
-# Execution Preflight: public contract
+# Execution Preflight: Base Mainnet transaction simulation API
 
-Execution Preflight helps an AI Agent evaluate an existing unsigned transaction candidate before onchain execution. It returns execution evidence, not a transaction signature, execution authority or financial recommendation.
+Execution Preflight helps an AI Agent simulate an existing unsigned Base Mainnet transaction before signing, inspect call success or revert, and check explicit top-level destination and L2 execution fee constraints. It returns structured Judgment, reason codes and evidence, not a transaction signature, execution authority or financial recommendation. Supported explicit fee context can add a separate [conditional network fee estimate](#optional-network-fee-estimate); it does not change legacy Judgment.
 
 `POST https://execution.dll.io/v2/execution/preflight`
 

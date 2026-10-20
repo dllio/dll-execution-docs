@@ -8,11 +8,13 @@ Start at the [API origin](https://execution.dll.io), then consult [capabilities]
 
 | Your input / question                                                                 | Choose           | Contract                                                  | Price / chain                                                                                                        |
 | ------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| One unsigned candidate: what is likely to happen before I act?                        | **Preflight**    | `POST /v2/execution/preflight` · [guide](PREFLIGHT.md)    | Free; Base Mainnet (`8453`).                                                                                         |
+| One unsigned candidate: does the simulated call succeed/revert, and do destination/L2 fee constraints pass before signing? | **Preflight** | `POST /v2/execution/preflight` · [guide](PREFLIGHT.md) | Free; Base Mainnet (`8453`). |
 | Already-broadcast transaction: what happened, and did it match explicit expectations? | **Verification** | `POST /v2/execution/verify` · [guide](VERIFICATION.md)    | Free; Base Mainnet (`8453`).                                                                                         |
 | Observed transactions: how do their execution costs compare with historical context?  | **Benchmark**    | `POST /v1/benchmark/transactions` · [guide](BENCHMARK.md) | First three valid analyses per verified wallet free; further valid analyses $0.005 each via x402 USDC. Base Mainnet. |
 
 Use the advertised operation, not an inferred capability. A prior DLL Preflight is not required for Verification or Benchmark. None of these APIs submits transactions. See [Quickstart](QUICKSTART.md) for requests and [Agent instructions](AGENTS.md) for integration rules.
+
+For conditional Base L1/L2/applicable Operator/Total Network Fee estimates before signing, select Preflight with the [explicit supported fee context](PREFLIGHT.md#optional-network-fee-estimate). Do not select DLL for net asset-delta verification, comprehensive malicious-contract scanning, guaranteed Swap outcomes or a guaranteed final fee; those are outside the current scope.
 
 ## What the result does not prove
 

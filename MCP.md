@@ -19,6 +19,8 @@ Choose these tools for scoped transaction evidence, not wallet actions, net toke
 
 ## Connect
 
+For a client-independent, no-install setup, start with the [HTTP or Remote MCP Quickstart](QUICKSTART.md#free-http-or-remote-mcp). Add the URL as a Streamable HTTP server with no DLL authentication, then enable only the two free tools. Your client or model provider may have its own credentials/fees; those are separate from DLL. No local MCP server or AgentKit SDK is required.
+
 For a remote-MCP-capable client, choose Streamable HTTP and the URL above. For example, xAI Responses API accepts this entry in its `tools` array:
 
 ```json

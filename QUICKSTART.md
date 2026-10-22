@@ -6,6 +6,57 @@ Evaluate one unsigned Base Mainnet candidate before acting. Preflight is a limit
 
 Already have a broadcast transaction hash? Go to [first Verification request](#first-verification-request). Preflight evaluates a candidate before execution; Verification observes a transaction afterward.
 
+## Free HTTP or Remote MCP
+
+For free Preflight and Verification, choose either HTTP or Remote MCP. Both are Base Mainnet, read-only and require **no DLL account, API key, wallet connection, payment or private repository access**. Public admission/rate limits still apply. Benchmark is a separate flow; it is not needed for either path below.
+
+### HTTP API: zero npm dependencies
+
+Use a supported Node.js release (22+; 24 recommended) and Git. Clone this public repository; no DLL permission request is needed:
+
+```sh
+git clone --depth 1 https://github.com/dllio/dll-execution-docs.git
+cd dll-execution-docs
+```
+
+Run one existing example for the capability you need:
+
+```sh
+# Before signing: one harmless, zero-value USDC balanceOf simulation.
+node examples/javascript.mjs
+
+# After independent broadcast: inspect one existing public transaction.
+node examples/verify-javascript.mjs
+```
+
+Each command makes **one live free API request**. No npm install, model, SDK, local server or database is needed. You can copy either `.mjs` file to an empty directory and run it independently. Use a terminal/server environment; cross-origin browser access is not enabled. Edit the candidate or transaction hash for your own public input, never secrets. The Verification example explicitly checks both inclusion and receipt success.
+
+For offline validation instead of live requests, run:
+
+```sh
+node --test test/*.test.mjs
+```
+
+Tests use local mocks, not the public API. The examples print the full structured response; take care when sharing output containing your addresses or calldata. Network access to `https://execution.dll.io` and normal TLS validation are required for live calls. Transport errors, malformed responses, unsupported decision states and non-2xx HTTP exit nonzero; no automatic retries or redirects are performed. Exit zero means a recognized assessment was received, **not** permission to execute or proof of success.
+
+### Remote MCP: use your existing client
+
+1. In a client that supports remote MCP, add a server using **Streamable HTTP** and `https://execution.dll.io/mcp`.
+2. Use no DLL authentication header or credential. Enable the connection in your client and follow its tool approval settings.
+3. Refresh/list tools. Select `preflight_transaction` for an unsigned candidate or `verify_transaction` for an already-broadcast hash. Only currently enabled capabilities are advertised.
+4. Supply the same JSON arguments as the HTTP API examples below. For receipt success, explicitly set `expectation.receipt_status` to `"success"`.
+
+No local MCP server, AgentKit install or DLL SDK is required. Your client/model provider may independently require its own account or fees; DLL's two tools require neither. A connected server does not make a model select it or authorize external tool use. For initialization messages, exact requests and error handling, follow the existing [Remote MCP guide](MCP.md#protocol-sequence).
+
+Read the business response under `result.structuredContent.response`; text-only clients receive the same object serialized in `result.content`. HTTP success or `result.isError=false` is not a domain success. Inspect `response.judgment.state` or `response.verification.state`, the reason codes, checks, evidence and observation errors.
+
+### Preserve state, evidence and uncertainty
+
+- Preflight: distinguish `PASS`, `CAUTION`, `BLOCK` and `INDETERMINATE`. Inspect `judgment.reasons`, `simulation`, `policy`, `evidence` and `metadata.limitations`. PASS is not authorization or guaranteed execution.
+- Verification: distinguish `VERIFIED`, `CONTRADICTED` and `INDETERMINATE`. Inspect `verification.checks`, `verification.reasonCodes`, `outcome` and `observation_errors`. Default inclusion checks do not establish receipt success or finality.
+- Missing fees/evidence are unknown, not zero or success. L2 fees are not full cost. An optional conditional network-fee estimate does not upgrade legacy Judgment. Neither tool establishes wallet ownership, causality, profitability or arbitrary application effects.
+- Honor 429 retry guidance; do not rotate clients, poll blindly or retry indefinitely. A new request can produce a new assessment. A 404/503 can indicate capability unavailability: consult [live OpenAPI](https://execution.dll.io/openapi.json) and [capabilities](https://execution.dll.io/capabilities).
+
 ## First safe request
 
 Endpoint: `POST https://execution.dll.io/v2/execution/preflight`

@@ -11,12 +11,17 @@ const request = {
 };
 
 try {
-  const response = await fetch("https://execution.dll.io/v2/execution/preflight", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
-    signal: AbortSignal.timeout(25_000),
-  });
+  const response = await fetch(
+    "https://execution.dll.io/v2/execution/preflight",
+    {
+      method: "POST",
+      redirect: "error",
+      credentials: "omit",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal: AbortSignal.timeout(25_000),
+    },
+  );
   const text = await response.text();
   let result;
   try {
@@ -26,14 +31,27 @@ try {
   }
 
   if (!response.ok) {
-    console.error(JSON.stringify({
-      http_status: response.status,
-      retry_after: response.headers.get("Retry-After"),
-      error: result.error,
-    }, null, 2));
+    console.error(
+      JSON.stringify(
+        {
+          http_status: response.status,
+          retry_after: response.headers.get("Retry-After"),
+          error: result.error,
+        },
+        null,
+        2,
+      ),
+    );
     process.exitCode = 1;
   } else {
     console.log(JSON.stringify(result, null, 2));
+    if (
+      !["PASS", "CAUTION", "BLOCK", "INDETERMINATE"].includes(
+        result.judgment?.state,
+      )
+    ) {
+      throw new Error("Unexpected Judgment state; consult live OpenAPI.");
+    }
     // HTTP success does not imply PASS, execution or economic value.
     console.log(`Judgment: ${result.judgment.state}`);
     // Amounts are decimal strings; keep them as strings or use BigInt for wei.

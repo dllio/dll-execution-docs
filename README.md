@@ -51,6 +51,8 @@ Benchmark compares observed Base Mainnet transaction costs with historical conte
 
 ## Start here
 
+Start with [HTTP or Remote MCP Quickstart](QUICKSTART.md#free-http-or-remote-mcp): no DLL account, API key, wallet or private repository access. The JavaScript path uses only Node.js built-ins; the remote MCP path uses your existing MCP client. No npm install or AgentKit SDK is required.
+
 - [Remote MCP](MCP.md): two free read-only tools and standard client setup; no wallet or payment.
 - [Capability selection and FAQ](CAPABILITY_SELECTION.md): choose Preflight, Verification or Benchmark and understand their boundaries.
 - [Quickstart](QUICKSTART.md): make your first Preflight or Verification call.
